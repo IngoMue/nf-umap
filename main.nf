@@ -6,7 +6,7 @@ reads_ch = Channel.fromPath(params.reads)
         .groupTuple()
 
 process index_ref {
-    publishDir "$params.outdir/indexref/", pattern: '*.ref', mode: 'copy'
+    publishDir "$params.outdir/indexref/", pattern: '*.fai', mode: 'copy'
     tag "$ref_file.baseName"
     input:
       file(ref_file) from refseq_ch
@@ -14,7 +14,7 @@ process index_ref {
       file 'index.ref' into idx_ref
     script:
     """
-      bwa-mem2 index $ref_file > index.ref
+      samtools faidx $ref_file
     """
 }
 
