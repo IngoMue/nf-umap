@@ -1,30 +1,31 @@
-refseq_ch = Channel.fromPath(params.refdir)
+refdir_ch = Channel.fromPath(params.refdir)
 
+refseq_ch = Channel.fromPath("${params.refdir}/${params.refname})
 
 reads_ch = Channel.fromPath(params.reads)
         .map{ [ it.name.tokenize("_")[0..-2].join("_"), it] }
         .groupTuple()
 
 process index_ref {
-    publishDir "$params.outdir/indexref/", pattern: '*.fai', mode: 'copy'
+    publishDir "$params.refdir", pattern: '*.fai', mode: 'copy'
     tag "$ref_file.baseName"
     input:
       file(ref_file) from refseq_ch
     output:
-      file 'index.ref' into idx_ref
+      file 'index.ref'
     script:
     """
       samtools faidx $ref_file
     """
 }
 
-
+refseq_ch = Channel.fromPath("${params.refdir}/${params.refname})
 
 process bwa_mem2 {
     publishDir "$params.outdir/sam/", pattern: '*.sam', mode: 'copy'
     tag "$sample_id"
     input:
-      each file(ref_file) from idx_ref
+      each file(ref_file) from refseq_ch
       tuple val(sample_id), file(sample_file) from reads_ch
     output:
       tuple val(sample_id), file("${sample_id}.sam") into sams_ch
