@@ -1,6 +1,18 @@
+#!/usr/bin/env nextflow
+
+log.info """\
+         nf - mapping - A simple nextflow mapping workflow     
+         =================================================
+         refdir        : ${params.refdir}
+         refname       : ${params.refname}
+         reads         : ${params.reads}
+         outdir        : ${params.outdir}
+         """
+         .stripIndent()
+
 refdir_ch = Channel.fromPath(params.refdir)
 
-refseq_ch = Channel.fromPath("${params.refdir}/${params.refname})
+refseq_ch = Channel.fromPath("${params.refdir}/${params.refname}")
 
 reads_ch = Channel.fromPath(params.reads)
         .map{ [ it.name.tokenize("_")[0..-2].join("_"), it] }
@@ -15,11 +27,11 @@ process index_ref {
       file 'index.ref'
     script:
     """
-      samtools faidx $ref_file
+      bwa-mem2 index $ref_file
     """
 }
 
-refseq_ch = Channel.fromPath("${params.refdir}/${params.refname})
+refseq_ch = Channel.fromPath("${params.refdir}/${params.refname}")
 
 process bwa_mem2 {
     publishDir "$params.outdir/sam/", pattern: '*.sam', mode: 'copy'
@@ -50,29 +62,18 @@ process convert_to_bam {
 }
 
 
-process sort_bam {
-    publishDir "$params.outdir/sorted/", pattern: '*_sorted.bam', mode: 'copy'
+process sort_index_bam {
+    publishDir "$params.outdir/sorted/", pattern: '*_sorted.{bam,bam.bai}', mode: 'copy'
     tag "$sample_id"
     input:
       tuple val(sample_id), file(sample_file) from bams_ch
     output:
-      tuple val(sample_id), file("${sample_id}_sorted.bam") into sorted_ch
+      file("${sample_id}_sorted.bam")
+      file("${sample_id}_sorted.bam.bai")
     script:
     """
       samtools sort -o ${sample_id}_sorted.bam $sample_file
+
+      samtools index ${sample_id}_sorted.bam
     """
 }
-
-process index_bam {
-    publishDir "$params.outdir/sorted/", pattern: '*.bai', mode: 'copy'
-    tag "$sample_id"
-    input:
-      tuple val(sample_id), file(sample_file) from sorted_ch
-    output:
-      file("${sample_id}.bai")
-    script:
-    """
-      samtools index $sample_file
-    """
-}
-
