@@ -1,0 +1,7 @@
+#Ignore these directories:
+.nextflow/
+work/
+
+#Ignore these files:
+.nextflow.log*
+
