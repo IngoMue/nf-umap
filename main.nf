@@ -1,12 +1,15 @@
 #!/usr/bin/env nextflow
 
 log.info """\
-         nf - mapping - A simple nextflow mapping workflow     
-         =================================================
-         refdir        : ${params.refdir}
-         refname       : ${params.refname}
-         reads         : ${params.reads}
-         outdir        : ${params.outdir}
+
+         NF-MAPPING - A nextflow mapping workflow     
+         ================================================
+         |refdir    : ${params.refdir}
+         |refname   : ${params.refname}
+         |refprefix : ${params.refprefix}
+         |reads     : ${params.reads}
+         |outdir    : ${params.outdir}
+         ================================================
          """
          .stripIndent()
 
@@ -15,24 +18,25 @@ refdir_ch = Channel.fromPath(params.refdir)
 refseq_ch = Channel.fromPath("${params.refdir}/${params.refname}")
 
 reads_ch = Channel.fromPath(params.reads)
-        .map{ [ it.name.tokenize("_")[0..-2].join("_"), it] }
+        .map { [ it.name.tokenize("_")[0..-2].join("_"), it] }
         .groupTuple()
+
 
 process index_ref {
     label 'High_RAM'
 
-    publishDir "$params.refdir", pattern: '*.fai', mode: 'copy'
-    tag "$ref_file.baseName"
+    publishDir "${params.refdir}/", mode:'copy'
+    tag "$ref_file"
 
     input:
       file(ref_file) from refseq_ch
 
     output:
-      file 'index.ref'
+      file '*' into idxref_ch
 
     script:
     """
-      bwa-mem2 index $ref_file
+      bwa-mem2 index -p $params.refprefix $ref_file
     """
 }
 
@@ -45,7 +49,8 @@ process bwa_mem2 {
     tag "$sample_id"
 
     input:
-      each file(ref_file) from refseq_ch
+      file(ref_file) from refseq_ch
+      file(index) from idxref_ch.first()
       tuple val(sample_id), file(sample_file) from reads_ch
 
     output:
@@ -59,7 +64,7 @@ process bwa_mem2 {
 
 
 process convert_to_bam {
-    publishDir "$params.outdir/bam/", pattern: '*.bam', mode: 'copy'
+    publishDir "${params.outdir}/bam/", pattern: '*.bam', mode: 'copy'
     tag "$sample_id"
 
     input:
@@ -76,7 +81,7 @@ process convert_to_bam {
 
 
 process sort_index_bam {
-    publishDir "$params.outdir/sorted/", pattern: '*_sorted.{bam,bam.bai}', mode: 'copy'
+    publishDir "${params.outdir}/sorted/", pattern: '*_sorted.{bam,bam.bai}', mode: 'copy'
     tag "$sample_id"
 
     input:
