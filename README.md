@@ -31,7 +31,9 @@ The pipeline in its current state runs through the following steps:
 * Perform quick check over coverage<sup>2</sup>
 
 The pipeline uses the following tools (Numbers show which step uses which tool):
+
 <sup>1</sup>[`bwa-mem2`](https://github.com/bwa-mem2/bwa-mem2) (version 2.2.1)
+
 <sup>2</sup>[`samtools`](http://www.htslib.org/) (version 1.13)
 
 ## Input
