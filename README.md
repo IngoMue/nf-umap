@@ -47,4 +47,4 @@ Information that needs to be supplied either through flags or specified within `
 * Asbolute path where merged reads a stored `merged_reads` (`path/to/*_U.fastq.gz`)
 * Output directory `outdir`
 
-Reads should follow this naming convention `{SAMPLE_ID}_{LIBRARY}_{R1,R2,U}.{format}` where `{Library}` should be an "L" followed by any number of digits (e.g `L01` or `L001`). `{SAMPLE_ID}` can be anything.
+Reads should follow this naming convention `{SAMPLE_ID}_{LIBRARY}_{R1,R2,U}.fastq{,.gz}` where `{Library}` should be an "L" followed by any number of digits (e.g `L01` or `L001`). `{SAMPLE_ID}` can be anything.
