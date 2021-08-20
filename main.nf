@@ -20,11 +20,11 @@ refdir_ch = Channel.fromPath(params.refdir)
 refseq_ch = Channel.fromPath("${params.refdir}/${params.refname}")
 
 p_reads = Channel.fromPath(params.read_pairs)
-        .map { [ it.name.tokenize("_")[0..-3].join("_"), it] }
+        .map { [ it.name.tokenize("_")[0..-2].join("_"), it] }
         .groupTuple()
 
 m_reads = Channel.fromPath(params.merged_reads)
-        .map { [ it.name.tokenize("_")[0..-3].join("_"), it] }
+        .map { [ it.name.tokenize("_")[0..-2].join("_"), it] }
         .groupTuple()
 
 
@@ -47,112 +47,131 @@ process index_ref {
 }
 
 
-process bwa_mem2_pairs {
+process bwa_mem2_PE {
     label 'High_RAM'
 
-    publishDir "${params.outdir}/02_samfiles/pairs/", pattern: '*.sam', mode: 'copy'
     tag "$sample_id"
 
     input:
       tuple val(sample_id), file(sample_file), val(ref_ID), file(index)
 
     output:
-      tuple val(sample_id), file("${sample_id}_P.sam")
+      tuple val(sample_id), file("${sample_id}_PE.sam")
 
     script:
     """
-      bwa-mem2 mem $params.refprefix $sample_file > ${sample_id}_P.sam
+      bwa-mem2 mem $params.refprefix $sample_file > ${sample_id}_PE.sam
     """
 }
 
-process bwa_mem2_merged {
+process bwa_mem2_SE {
     label 'High_RAM'
 
-    publishDir "$params.outdir/02_samfiles/merged", pattern: '*.sam', mode: 'copy'
     tag "$mrg_id"
 
     input:
       tuple val(mrg_id), file(merged_file), val(ref_ID), file(index)
 
     output:
-      tuple val(mrg_id), file("${mrg_id}_M.sam")
+      tuple val(mrg_id), file("${mrg_id}_SE.sam")
 
     script:
     """
-      bwa-mem2 mem $params.refprefix $merged_file > ${mrg_id}_M.sam
+      bwa-mem2 mem $params.refprefix $merged_file > ${mrg_id}_SE.sam
     """
 }
 
 
-process samtools_bam_srt_idx_p {
-    publishDir "${params.outdir}/03_bams/", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
+process samtools_bam_srt_idx_PE {
+    publishDir "${params.outdir}/02_bams/PairedEnd", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
     tag "$sample_id"
 
     input:
       tuple val(sample_id), file(sam_file)
 
     output:
-      file("${sample_id}_P_sorted.bam")
-      file("${sample_id}_P_sorted.bam.bai")
+      file("${sample_id}_PE_sorted.bam")
+      file("${sample_id}_PE_sorted.bam.bai")
 
     script:
     """
-      samtools view -bS $sam_file > ${sample_id}_P.bam
+      samtools view -bS $sam_file > ${sample_id}_PE.bam
 
-      samtools sort -o ${sample_id}_P_sorted.bam ${sample_id}_P.bam
+      samtools sort -o ${sample_id}_PE_sorted.bam ${sample_id}_PE.bam
 
-      samtools index ${sample_id}_P_sorted.bam
+      samtools index ${sample_id}_PE_sorted.bam
     """
 }
 
-process samtools_bam_srt_idx_m {
-    publishDir "${params.outdir}/03_bams/", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
+process samtools_bam_srt_idx_SE {
+    publishDir "${params.outdir}/02_bams/SingleEnd", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
     tag "$sample_id"
 
     input:
       tuple val(sample_id), file(sam_file)
 
     output:
-      file("${sample_id}_M_sorted.bam")
-      file("${sample_id}_M_sorted.bam.bai")
+      file("${sample_id}_SE_sorted.bam")
+      file("${sample_id}_SE_sorted.bam.bai")
 
     script:
     """
-      samtools view -bS $sam_file > ${sample_id}_M.bam
+      samtools view -bS $sam_file > ${sample_id}_SE.bam
 
-      samtools sort -o ${sample_id}_M_sorted.bam ${sample_id}_M.bam
+      samtools sort -o ${sample_id}_SE_sorted.bam ${sample_id}_SE.bam
 
-      samtools index ${sample_id}_M_sorted.bam
+      samtools index ${sample_id}_SE_sorted.bam
     """
 }
 
 
 process samtools_merge {
-    publishDir "${params.outdir}/04_merged/", pattern: '*{.bam,.bam.bai}', mode: 'copy'
+    publishDir "${params.outdir}/03_merged_bams/", pattern: '*{.bam,.bam.bai}', mode: 'copy'
     tag "$sample_id"
 
     input:
-      tuple val(sample_id), file(bams)
+      tuple val(sample_id), file(bam_file)
+
+    output:
+      tuple val(sample_id), file("${sample_id}.bam")
+      file '*.bai'
+
+    script:
+    """
+      samtools merge -o ${sample_id}.bam $bam_file
+
+      samtools index ${sample_id}.bam
+    """
+}
+
+process samtools_coverage {
+    publishDir "${params.outdir}/04_mapping_stats/", pattern: '*{.stats,.hist}', mode: 'copy'
+    tag "$sample_id"
+
+    input:
+      tuple val(sample_id), file(bam_file)
 
     output:
       file '*'
 
     script:
     """
-      samtools merge -o ${sample_id}.bam $bams
+      samtools coverage -o ${sample_id}.stats ${bam_file}
 
-      samtools index ${sample_id}.bam
+      samtools coverage -m -o ${sample_id}.hist ${bam_file}
     """
 }
+
 
 workflow {
     index_ref(refseq_ch)
     refindex = refseq_ch.combine(index_ref.out).map { it -> tuple(it.simpleName, it) }
-    p_reads_idx = p_reads.combine(refindex)
-    m_reads_idx = m_reads.combine(refindex)
-    bwa_mem2_pairs(p_reads_idx)
-    bwa_mem2_merged(m_reads_idx)
-    samtools_bam_srt_idx_p(bwa_mem2_pairs.out)
-    samtools_bam_srt_idx_m(bwa_mem2_merged.out)
-    samtools_merge(samtools_bam_srt_idx_p.out[0].mix(samtools_bam_srt_idx_m.out[0]).map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
+    PE_reads_idx = p_reads.combine(refindex)
+    SE_reads_idx = m_reads.combine(refindex)
+    bwa_mem2_PE(PE_reads_idx)
+    bwa_mem2_SE(SE_reads_idx)
+    samtools_bam_srt_idx_PE(bwa_mem2_PE.out)
+    samtools_bam_srt_idx_SE(bwa_mem2_SE.out)
+    samtools_merge(samtools_bam_srt_idx_PE.out[0].mix(samtools_bam_srt_idx_SE.out[0]).map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
+    samtools_coverage(samtools_merge.out[0])
 }
