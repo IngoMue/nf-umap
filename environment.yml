@@ -1,8 +1,9 @@
 name: nf_mapping_env
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
   - defaults
 dependencies:
  - bwa-mem2=2.2.1
  - samtools=1.13
+ - qualimap=2.2.2d
