@@ -144,8 +144,8 @@ process samtools_merge {
     """
 }
 
-process samtools_coverage {
-    publishDir "${params.outdir}/04_mapping_stats/", pattern: '*{.stats,.hist}', mode: 'copy'
+process qualimap_bamqc {
+    publishDir "${params.outdir}/04_mapping_stats/", mode: 'copy'
     tag "$sample_id"
 
     input:
@@ -156,9 +156,7 @@ process samtools_coverage {
 
     script:
     """
-      samtools coverage -o ${sample_id}.stats ${bam_file}
-
-      samtools coverage -m -o ${sample_id}.hist ${bam_file}
+      qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/  -c
     """
 }
 
@@ -173,5 +171,5 @@ workflow {
     samtools_bam_srt_idx_PE(bwa_mem2_PE.out)
     samtools_bam_srt_idx_SE(bwa_mem2_SE.out)
     samtools_merge(samtools_bam_srt_idx_PE.out[0].mix(samtools_bam_srt_idx_SE.out[0]).map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
-    samtools_coverage(samtools_merge.out[0])
+    qualimap_bamqc(samtools_merge.out[0])
 }
