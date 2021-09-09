@@ -20,21 +20,23 @@
 
 ## Overview
 
-The pipeline in its current state runs through the following steps:
+The pipeline was designed to follow up after read cleaning, specifically having the output from [nf-polish](https://github.com/MozesBlom/nf-polish) in mind, but it can of course be used on any paired-end reads (unpaired and/or merged). In its current state it runs through the following steps:
 
 * Reference sequence indexing<sup>1</sup>
-* Paired-end (PE) read alignment<sup>1</sup>
-* Single-end (SE) read alignment<sup>1</sup>
+* Unpaired (UNP) read alignment<sup>1</sup>
+* Merged (MRG) read alignment<sup>1</sup>
 * Conversion to `.bam` format<sup>2</sup>
 * Sorting and indexing of `.bam` files<sup>2</sup>
-* Merging PE and SE files as well as different libraries for the same sample (if available)<sup>2</sup>
-* Perform quick check over coverage<sup>2</sup>
+* Merging UNP and MRG files as well as different libraries for the same sample (if available)<sup>2</sup>
+* Perform quality control and generate a html and raw txt report for each individual with bamqc<sup>3</sup>
 
 The pipeline uses the following tools (Numbers show which step uses which tool):
 
 <sup>1</sup>[`bwa-mem2`](https://github.com/bwa-mem2/bwa-mem2) (version 2.2.1)
 
 <sup>2</sup>[`samtools`](http://www.htslib.org/) (version 1.13)
+
+<sup>3</sup>[`qualimap`](http://qualimap.conesalab.org/) (version 2.2.2d)
 
 ## Input
 
@@ -43,8 +45,16 @@ Information that needs to be supplied either through flags or specified within `
 * Reference sequence directory `refdir`
 * Full name of the reference sequence `refname` (e.g. `GCF_000738735.5_ASM73873v5_genomic.fna.gz`)
 * Prefix of the reference sequence `refprefix` (e.g. `GCF_000738735.5_ASM73873v5_genomic`)
-* Absolute path where read pairs are stored `read_pairs` (`path/to/*_{R1,R2}.fastq.gz`)
+* Absolute path where unpaired reads are stored `read_pairs` (`path/to/*_{R1,R2}.fastq.gz`)
 * Asbolute path where merged reads a stored `merged_reads` (`path/to/*_U.fastq.gz`)
 * Output directory `outdir`
+* Specify whether you want to use merged and/or unpaired reads for mapping `inclMrgRds` `inclUnpRds` respectively (boolean, default true)
+* Specify whether the server uses an X11 system `X11` (boolean), if it doesn't, qualimap will throw an error (default false)
+* Decide whether the QC report should be an .html report with figures or a simple .txt file `fullreport` (boolean, default true)
 
 Reads should follow this naming convention `{SAMPLE_ID}_{LIBRARY}_{R1,R2,U}.{format}` where `{Library}` should be an "L" followed by any number of digits (e.g `L01` or `L001`). `{SAMPLE_ID}` can be anything. `{format}` can be specified in any way as long as it gets recognised by bwa-mem2 and samtools.
+
+An example for using this workflow would look like this:
+```bash
+nextflow run main.nf -profile custom --refdir /some/path/RefDir/ --refname RefID_genomic.fa --refprefix RefID_genomic --read_pairs /some/path/'*_{R1,R2}.fastq.gz' --merged_reads /some/path/'*_U.fastq.gz' --outdir /some/path/results/ --X11 true --fullreport false
+```
