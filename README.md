@@ -6,11 +6,12 @@
 
 1. Install [`nextflow`](https://www.nextflow.io/) (version >= 19.04)
 2. Install [`Conda`](https://conda.io/miniconda.html) (version >= 4.10)
-3. Download the pipeline, create a nextflow config profile that matches your cluster set-up ( [`profile`]( https://www.nextflow.io/docs/latest/config.html#config-profiles) ) and start running your own analysis! If you want to use the existing `rackham.config` remember to specify your SNIC project ID (format: `snic20XX-XX-XXX`) as well as the path to `nf-polish/environment.yml`
+3. Download the pipeline, edit or create a config profile for the cluster you are using ( [`profile`]( https://www.nextflow.io/docs/latest/config.html#config-profiles) ) and run the workflow. If you want to use the existing `rackham.config` remember to specify your SNIC project ID (format: `snic20XX-XX-XXX`) as well as the path to `nf-polish/environment.yml`
 
     ```bash
-    nextflow run nf-mapping/main.nf -profile rackham --reads 'READS'
+    nextflow run main.nf -profile custom --refdir 'RefDir' --refname 'RefID.fa' --refprefix 'RefID' --read_pairs 'READS' --merged_reads 'MERGED_READS' --outdir 'OutputDir*
     ```
+   (see below for a more detailed example)
 4. Once your run has completed successfully, clean up the intermediate files.
 
     ```bash
