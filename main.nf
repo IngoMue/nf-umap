@@ -170,6 +170,7 @@ process samtools_merge {
 process qualimap_bamqc {
     publishDir "${params.outdir}/04_mapping_stats/${sample_id}", pattern: '*.{txt,pdf}', mode: 'move'
     tag "$sample_id"
+    label 'High_RAM'
 
     input:
       tuple val(sample_id), file(bam_file)
