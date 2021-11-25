@@ -211,17 +211,16 @@ workflow {
 
     if (params.inclUnpRds == true) {
         UNP_reads_idx = unp_reads.combine(refindex)
+	bwa_mem2_UNP(UNP_reads_idx)
+        samtools_bam_srt_idx_UNP(bwa_mem2_UNP.out)
     }
-
-    bwa_mem2_UNP(UNP_reads_idx)
-    samtools_bam_srt_idx_UNP(bwa_mem2_UNP.out)
 
     if (params.inclMrgRds == true) {
         MRG_reads_idx = mrg_reads.combine(refindex)
-    }
+        bwa_mem2_MRG(MRG_reads_idx)
+        samtools_bam_srt_idx_MRG(bwa_mem2_MRG.out)
 
-    bwa_mem2_MRG(MRG_reads_idx)
-    samtools_bam_srt_idx_MRG(bwa_mem2_MRG.out)
+    }
 
     if (params.inclUnpRds == true && params.inclMrgRds == true) {
         samtools_merge(samtools_bam_srt_idx_UNP.out[0].mix(samtools_bam_srt_idx_MRG.out[0]).map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
