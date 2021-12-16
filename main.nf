@@ -115,11 +115,11 @@ process samtools_bam_srt_idx_UNP {
 
     script:
     """
-      samtools view -bS $sam_file > ${sample_id}_UNP.bam
+      samtools view -@ ${task.cpus} -bS $sam_file > ${sample_id}_UNP.bam
 
-      samtools sort -o ${sample_id}_UNP_sorted.bam ${sample_id}_UNP.bam
+      samtools sort -@ ${task.cpus} -o ${sample_id}_UNP_sorted.bam ${sample_id}_UNP.bam
 
-      samtools index ${sample_id}_UNP_sorted.bam
+      samtools index -@ ${task.cpus} ${sample_id}_UNP_sorted.bam
     """
 }
 
@@ -139,11 +139,11 @@ process samtools_bam_srt_idx_MRG {
 
     script:
     """
-      samtools view -bS $sam_file > ${sample_id}_MRG.bam
+      samtools view -@ ${task.cpus} -bS $sam_file > ${sample_id}_MRG.bam
 
-      samtools sort -o ${sample_id}_MRG_sorted.bam ${sample_id}_MRG.bam
+      samtools sort -@ ${task.cpus} -o ${sample_id}_MRG_sorted.bam ${sample_id}_MRG.bam
 
-      samtools index ${sample_id}_MRG_sorted.bam
+      samtools index -@ ${task.cpus} ${sample_id}_MRG_sorted.bam
     """
 }
 
@@ -163,7 +163,7 @@ process samtools_merge {
     """
       samtools merge -o ${sample_id}.bam $bam_file
 
-      samtools index ${sample_id}.bam
+      samtools index -@ ${task.cpus} ${sample_id}.bam
     """
 }
 
@@ -181,24 +181,24 @@ process qualimap_bamqc {
     script:
         if (params.X11 == true && params.fullreport == false)
             """
-              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -c
+              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus}
               cp ./${sample_id}/genome_results.txt ./${sample_id}_genome_results.txt
 	    """
         else if (params.X11 == false && params.fullreport == false)
             """
               unset DISPLAY
-              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -c
+              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus}
               cp ./${sample_id}/genome_results.txt ./${sample_id}_genome_results.txt
             """
         else if (params.X11 == true && params.fullreport == true)
             """
-              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -outfile ${sample_id}_report.pdf -c
+              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -outfile ${sample_id}_report.pdf -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus}
               cp ./${sample_id}/* .
             """
         else if (params.X11 == false && params.fullreport == true)
             """
               unset DISPLAY
-              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -outfile ${sample_id}_report.pdf -c
+              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -outfile ${sample_id}_report.pdf -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus}
               cp ./${sample_id}/* .
             """
 
