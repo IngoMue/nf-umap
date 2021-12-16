@@ -8,8 +8,7 @@ log.info """\
          https://github.com/IngoMue/nf-mapping     
          Author: Ingo A. Müller
          ================================================
-         |refdir       : ${params.refdir}
-         |refname      : ${params.refname}
+         |refseq       : ${params.refseq}
          |refprefix    : ${params.refprefix}
          |readpairs    : ${params.read_pairs}
          |mergedreads  : ${params.merged_reads}
@@ -26,9 +25,7 @@ log.info """\
          """
          .stripIndent()
 
-refdir_ch = Channel.fromPath(params.refdir)
-
-refseq_ch = Channel.fromPath("${params.refdir}/${params.refname}")
+refseq_ch = Channel.fromPath(params.refseq)
 
 unp_reads = Channel.fromPath(params.read_pairs)
         .map { [ it.name.tokenize("_")[0..-2].join("_"), it] }
