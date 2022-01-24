@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 log.info """\
 
          ================================================
-         NF-MAPPING - A nextflow mapping workflow
+         NF-μmap - A nextflow mapping workflow for museomics data
          https://github.com/IngoMue/nf-mapping     
          Author: Ingo A. Müller
          ================================================
@@ -21,6 +21,7 @@ log.info """\
          |X11 unix server?..........${params.X11}
          |
          |Print full QC report?.....${params.fullreport}
+         |Run DamageProfiler?.......${params.runDMGprof}
          ================================================
          """
          .stripIndent()
@@ -201,18 +202,35 @@ process qualimap_bamqc {
 
 }
 
+process dmgprof {
+    publishDir "${params.outdir}/05_damage/${sample_id}", pattern: '*.pdf', mode: 'move'
+    tag "$sample_id"
+
+    input:
+      tuple val(sample_id), file(bam_file), val(ref_ID), file(index)
+
+    output:
+      file '*'
+
+    script:
+        """
+          damageprofiler -Xmx${task.memory.toGiga()}g -i $bam_file -r ${params.refseq} -o .
+        """
+
+}
+
 
 workflow {
     index_ref(refseq_ch)
     refindex = refseq_ch.combine(index_ref.out).map { it -> tuple(it.simpleName, it) }
 
-    if (params.inclUnpRds == true) {
+    if (params.inclUnpRds) {
         UNP_reads_idx = unp_reads.combine(refindex)
 	bwa_mem2_UNP(UNP_reads_idx)
         samtools_bam_srt_idx_UNP(bwa_mem2_UNP.out)
     }
 
-    if (params.inclMrgRds == true) {
+    if (params.inclMrgRds) {
         MRG_reads_idx = mrg_reads.combine(refindex)
         bwa_mem2_MRG(MRG_reads_idx)
         samtools_bam_srt_idx_MRG(bwa_mem2_MRG.out)
@@ -228,4 +246,8 @@ workflow {
     }
 
     qualimap_bamqc(samtools_merge.out[0])
+    if (params.runDMGprof) {
+        dmgprof(samtools_merge.out[0].combine(refindex))
+    }
+
 }

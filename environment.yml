@@ -7,3 +7,4 @@ dependencies:
  - bwa-mem2=2.2.1
  - samtools=1.13
  - qualimap=2.2.2d
+ - damageprofiler=1.1
