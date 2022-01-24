@@ -1,6 +1,6 @@
 # nf-μmap
 
-** nf-μmap (/ˈmjuːmæp/) is my little DNA read mapping workflow which I wrote to use on sequences from museum specimen**
+**nf-μmap (/ˈmjuːmæp/) is my little DNA read mapping workflow which I wrote to use on sequences from museum specimen**
 
 ## Quick Start
 
