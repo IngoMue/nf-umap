@@ -5,7 +5,7 @@ log.info """\
 
          ================================================
          NF-μmap - A nextflow mapping workflow for museomics data
-         https://github.com/IngoMue/nf-mapping     
+         https://github.com/IngoMue/nf-umap     
          Author: Ingo A. Müller
          ================================================
          |refseq       : ${params.refseq}
