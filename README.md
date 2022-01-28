@@ -52,7 +52,7 @@ Information that needs to be supplied either through flags or specified within `
 * Asbolute path where merged reads a stored `merged_reads` (`path/to/*_U.fastq.gz`)
 * Output directory `outdir`
 * Specify whether you want to use merged and/or unpaired reads for mapping `inclMrgRds` `inclUnpRds` respectively (boolean, default true)
-* Specify whether the server uses an X11 system `X11` (boolean), if it doesn't, qualimap will throw an error (default false)
+* Specify whether the server uses an X11 system `X11` (boolean), if it doesn't, qualimap will throw an [error](http://qualimap.conesalab.org/doc_html/faq.html#x11problem) (default false)
 * Decide whether the QC report should be a full .pdf report with figures or a simple .txt file `fullreport` (boolean, default true)
 * Decide whether you want to run DamageProfiler to asses damage patterns `runDMGprof` (boolean, default true)
 
