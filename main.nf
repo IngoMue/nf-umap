@@ -37,6 +37,23 @@ mrg_reads = Channel.fromPath(params.merged_reads)
         .groupTuple()
 
 
+process faidx_ref {
+
+    publishDir "${params.outdir}/01_RefIndex", mode:'copy'
+    tag "$ref_file"
+
+    input:
+      file ref_file
+
+    output:
+      file("*.fai")
+
+    script:
+    """
+      samtools faidx $ref_file
+    """
+}
+
 process index_ref {
     label 'High_RAM'
 
@@ -221,6 +238,7 @@ process dmgprof {
 
 
 workflow {
+    faidx_ref(refseq_ch)
     index_ref(refseq_ch)
     refindex = refseq_ch.combine(index_ref.out).map { it -> tuple(it.simpleName, it) }
 

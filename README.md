@@ -23,20 +23,20 @@
 
 The pipeline was designed to follow up after read cleaning, specifically having the output from [nf-polish](https://github.com/MozesBlom/nf-polish) in mind, but it can of course be used on any paired-end reads (unpaired and/or merged). In its current state it runs through the following steps:
 
-* Reference sequence indexing<sup>1</sup>
-* Unpaired (UNP) read alignment<sup>1</sup>
-* Merged (MRG) read alignment<sup>1</sup>
-* Conversion to `.bam` format<sup>2</sup>
-* Sorting and indexing of `.bam` files<sup>2</sup>
-* Merging UNP and MRG files as well as different libraries for the same sample (if available)<sup>2</sup>
+* Reference sequence indexing<sup>1, 2</sup>
+* Unpaired (UNP) read alignment<sup>2</sup>
+* Merged (MRG) read alignment<sup>2</sup>
+* Conversion to `.bam` format<sup>1</sup>
+* Sorting and indexing of `.bam` files<sup>1</sup>
+* Merging UNP and MRG files as well as different libraries for the same sample (if available)<sup>1</sup>
 * Perform quality control and generate a html and raw txt report for each individual with bamqc<sup>3</sup>
 * Investigate damage patterns typical for aDNA/hDNA<sup>4</sup>
 
 The pipeline uses the following tools (Numbers show which step uses which tool):
 
-<sup>1</sup>[`bwa-mem2`](https://github.com/bwa-mem2/bwa-mem2) (version 2.2.1)
+<sup>1</sup>[`samtools`](http://www.htslib.org/) (version 1.13)
 
-<sup>2</sup>[`samtools`](http://www.htslib.org/) (version 1.13)
+<sup>2</sup>[`bwa-mem2`](https://github.com/bwa-mem2/bwa-mem2) (version 2.2.1)
 
 <sup>3</sup>[`qualimap`](http://qualimap.conesalab.org/) (version 2.2.2d)
 
@@ -44,7 +44,7 @@ The pipeline uses the following tools (Numbers show which step uses which tool):
 
 ## Input
 
-The pipeline uses `fastq(.gz)` reads as input. All reads need to be stored in a single directory.
+The pipeline uses `fastq(.gz)` reads as input. All reads need to be stored in a single directory. The reference sequence should be in FASTA format.
 Information that needs to be supplied either through flags or specified within `nextflow.config` includes:
 * Reference sequence directory `refseq`
 * Prefix of the reference sequence `refprefix` (e.g. `GCF_000738735.5_ASM73873v5_genomic`)
