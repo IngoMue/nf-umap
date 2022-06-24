@@ -27,12 +27,12 @@
 The pipeline was designed to follow up after read cleaning, specifically having the output from [nf-polish](https://github.com/MozesBlom/nf-polish) in mind, but it can of course be used on any paired-end reads (unpaired and/or merged). In its current state it runs through the following steps:
 
 * Reference sequence indexing <sup>1, 2</sup>
-* Unpaired (UNP) read alignment <sup>2 or 3</sup>
+* Unpaired read pair (PRS) alignment <sup>2 or 3</sup>
 * Merged (MRG) read alignment <sup>2 or 3</sup>
 * Quickcheck whether any `.sam` files are truncated <sup>1</sup>
 * Conversion to `.bam` format <sup>1</sup>
 * Sorting and indexing of `.bam` files <sup>1</sup>
-* Merging UNP and MRG files as well as different libraries for the same sample (if available) <sup>1</sup>
+* Merging PRS and MRG files as well as different libraries for the same sample (if available) <sup>1</sup>
 * Another quickcheck to see whether the final `.bam` files are truncated <sup>1</sup>
 * Perform quality control and generate a html and raw txt report for each individual with bamqc <sup>4</sup>
 * Investigate damage patterns typical for aDNA/hDNA <sup>5</sup>
