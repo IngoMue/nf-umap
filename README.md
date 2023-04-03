@@ -4,7 +4,7 @@
 
 ## Quick Start
 
-1. Install [`nextflow`](https://www.nextflow.io/) (version >= 19.04)
+1. Install [`nextflow`](https://www.nextflow.io/) (version >= 22.10.2)
 2. Install [`Conda`](https://conda.io/miniconda.html) (version >= 4.10)
 3. Download the pipeline, edit or create a config profile for the cluster you are using ( [`profile`]( https://www.nextflow.io/docs/latest/config.html#config-profiles) ) and run the workflow. If you want to use the existing `rackham.config` remember to specify your SNIC project ID (format: `snic20XX-XX-XXX`) as well as the path to `nf-polish/environment.yml`
 
