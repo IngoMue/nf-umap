@@ -6,7 +6,7 @@
 
 1. Install [`nextflow`](https://www.nextflow.io/) (version >= 22.10.2)
 2. Install [`Conda`](https://conda.io/miniconda.html) (version >= 4.10)
-3. Download the pipeline, edit or create a config profile for the cluster you are using ( [`profile`]( https://www.nextflow.io/docs/latest/config.html#config-profiles) ) and run the workflow. If you want to use the existing `profile.config` which is written for users of Uppmax remember to specify your naiss project ID (format: `naiss20XX-XX-XXX`) as well as the path to `nf-umap/environment.yml`
+3. Download the pipeline, edit or create a config profile for the cluster you are using ( [`profile`]( https://www.nextflow.io/docs/latest/config.html#config-profiles) ) and run the workflow. If you want to use the existing `profile.config` which is written for users of Uppmax' Rackham cluster, remember to specify your naiss project ID (format: `naiss20XX-XX-XXX`) as well as the path to `nf-umap/environment.yml`
 
     ```bash
     nextflow run main.nf -profile custom --refdir 'RefDir' --refname 'RefID.fa' --refprefix 'RefID' --read_pairs 'READS' --merged_reads 'MERGED_READS' --outdir 'OutputDir*
