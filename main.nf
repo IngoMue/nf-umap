@@ -60,7 +60,7 @@ process faidx_ref {
 }
 
 process mem2_index_ref {
-    label 'High_CPU'
+    label 'High_mem'
 
     publishDir "${params.outdir}/01_RefIndex", mode:'copy'
     tag "Indexing $ref_file with bwa-mem2 index"
