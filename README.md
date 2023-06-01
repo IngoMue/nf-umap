@@ -51,7 +51,7 @@ The pipeline uses the following tools (Numbers show which step uses which tool):
 
 ## Input
 
-The pipeline uses `fastq(.gz)` reads as input. All reads need to be stored in a single directory. The reference sequence should be in FASTA (`.fasta`, `.fa`, `.fna`, ...) format.
+The pipeline uses `fastq(.gz)` reads as input. All reads need to be stored in a single directory. The reference sequence should be in uncompressed FASTA (`.fasta`, `.fa`, `.fna`, ...) format.
 Information that needs to be supplied either through flags or specified within `nextflow.config` includes:
 * Asbolute path to the reference sequence directory `refseq` (`path/to/GCF_000738735.5_ASM73873v5_genomic.fa`)
 * Prefix of the reference sequence `refprefix` (e.g. `GCF_000738735.5_ASM73873v5_genomic`)
