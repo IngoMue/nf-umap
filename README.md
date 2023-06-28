@@ -62,6 +62,7 @@ Information that needs to be supplied either through flags or specified within `
 * Decide whether bwa's newer version bwa-mem2 (identical output, faster, but larger index files, may not run on every cluster) or the original bwa-mem should be used for mapping `usebwamem2` (boolean, default true)
 * Should merging be skipped? `skipmerge` (boolean, default false) If one library per individual and only one type of reads are used, merging becomes unnecessary
 * Specify whether the server uses an X11 system `X11` (boolean), if it doesn't, qualimap will throw an [error](http://qualimap.conesalab.org/doc_html/faq.html#x11problem) (default false)
+* Specify whether you are using Mamba `UseMamba` (boolean, default true)
 * Decide whether the QC report should be a full .pdf report with figures or a simple .txt file `fullreport` (boolean, default true)
 * Decide whether you want to run DamageProfiler to asses damage patterns `runDMGprof` (boolean, default true)
 
