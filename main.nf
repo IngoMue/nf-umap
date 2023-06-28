@@ -43,9 +43,9 @@ mrg_reads = Channel.fromPath(params.merged_reads)
 
 
 process faidx_ref {
-
     publishDir "${params.outdir}/01_RefIndex", mode:'copy'
     tag "Indexing $ref_file with samtools faidx"
+    label 'Low_res'
 
     input:
       file ref_file
@@ -60,10 +60,9 @@ process faidx_ref {
 }
 
 process mem2_index_ref {
-    label 'High_mem'
-
     publishDir "${params.outdir}/01_RefIndex", mode:'copy'
     tag "Indexing $ref_file with bwa-mem2 index"
+    label 'High_mem'
 
     input:
       file ref_file
@@ -139,6 +138,7 @@ process bwa_mem_PRS {
 process quickcheck_PRS_sams {
     publishDir "${params.outdir}/00_quickcheck/", pattern: '*fofn', mode: 'copy'
     tag "Running quickcheck for all .sam files (read pairs)"
+    label 'Low_res'
 
     input:
       file(sams)
@@ -196,6 +196,7 @@ process bwa_mem_MRG {
 process quickcheck_MRG_sams {
     publishDir "${params.outdir}/00_quickcheck/", pattern: '*fofn', mode: 'copy'
     tag "Running quickcheck for all .sam files (merged reads)"
+    label 'Low_res'
 
     input:
       file(sams)
@@ -212,7 +213,9 @@ process quickcheck_MRG_sams {
 
 
 process samtools_bam_srt_idx_PRS {
+    if (publishInterBams == true) {
     publishDir "${params.outdir}/02_bams/ReadPairs", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
+    }
     tag "Bam conversion, sorting and indexing for $sample_id (read pairs)"
 
     input:
@@ -236,7 +239,9 @@ process samtools_bam_srt_idx_PRS {
 }
 
 process samtools_bam_srt_idx_MRG {
-    publishDir "${params.outdir}/02_bams/MergedReads", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
+    if (publishInterBams == true) {
+        publishDir "${params.outdir}/02_bams/MergedReads", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
+    }
     tag "Bam conversion, sorting and indexing for $sample_id (merged reads)"
 
     input:
@@ -263,6 +268,7 @@ process samtools_bam_srt_idx_MRG {
 process samtools_merge {
     publishDir "${params.outdir}/03_merged_bams/", pattern: '*{.bam,.bam.bai}', mode: 'copy'
     tag "Merging all .bam files for $sample_id"
+    label 'Low_res'
 
     input:
       tuple val(sample_id), file(bam_file)
@@ -285,6 +291,7 @@ process samtools_merge {
 process quickcheck_bams {
     publishDir "${params.outdir}/00_quickcheck/", pattern: '*fofn', mode: 'copy'
     tag "Running quickcheck for all .bam files"
+    label 'Low_res'
 
     input:
       file(bams)
