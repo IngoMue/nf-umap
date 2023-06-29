@@ -9,3 +9,4 @@ dependencies:
  - samtools=1.13
  - qualimap=2.1.1
  - damageprofiler=0.4.9
+ - picard=2.27.5
