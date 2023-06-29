@@ -356,7 +356,13 @@ process dmgprof {
       file '*'
 
     script:
+    if (params.X11 == true)
         """
+          damageprofiler -Xmx${task.memory.toGiga()}g -i $bam_file -r ${params.refseq} -o .
+        """
+    else if (params.X11 == false)
+        """
+          unset DISPLAY
           damageprofiler -Xmx${task.memory.toGiga()}g -i $bam_file -r ${params.refseq} -o .
         """
 
