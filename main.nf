@@ -12,6 +12,7 @@ log.info """\
          |readpairs    : ${params.read_pairs}
          |mergedreads  : ${params.merged_reads}
          |outdir       : ${params.outdir}
+         |rgID         : ${params.rgID}
          |
          |Include read pairs?....${params.inclRdPrs}
          |Include merged reads?..${params.inclMrgRds}
@@ -213,17 +214,13 @@ process quickcheck_MRG_sams {
 
 
 process samtools_bam_srt_idx_PRS {
-    if (publishInterBams == true) {
-    publishDir "${params.outdir}/02_bams/ReadPairs", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
-    }
     tag "Bam conversion, sorting and indexing for $sample_id (read pairs)"
 
     input:
       tuple val(sample_id), file(sam_file)
 
     output:
-      file("${sample_id}_PRS_sorted.bam")
-      file("${sample_id}_PRS_sorted.bam.bai")
+      tuple val(sample_id), file("${sample_id}_PRS_sorted.bam"), file("${sample_id}_PRS_sorted.bam.bai")
 
     when:
       params.inclRdPrs == true
@@ -238,18 +235,41 @@ process samtools_bam_srt_idx_PRS {
     """
 }
 
-process samtools_bam_srt_idx_MRG {
+process picard_RG_PRS {
     if (publishInterBams == true) {
-        publishDir "${params.outdir}/02_bams/MergedReads", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
+    publishDir "${params.outdir}/02_bams/ReadPairs", pattern: '*{.bam,.bam.bai}', mode: 'copy'
     }
+    tag "Adding read group information to $sample_id (read pairs)"
+    label 'Low_res'
+
+    input:
+      tuple val(sample_id), file(bam_file), file(bam_index), val(lib)
+
+    output:
+      file("${sample_id}_RG.bam")
+      file("${sample_id}_RG.bam.bai")
+
+    when:
+      params.inclRdPrs == true
+
+    script:
+    """
+      picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=$bam_file O=${sample_id}_RG.bam RGID=$params.rgID RGLB=$lib RGPL=illumina RGSM=$sample_id
+
+      samtools index -@ ${task.cpus} ${sample_id}_RG.bam
+    """
+}
+
+
+
+process samtools_bam_srt_idx_MRG {
     tag "Bam conversion, sorting and indexing for $sample_id (merged reads)"
 
     input:
       tuple val(sample_id), file(sam_file)
 
     output:
-      file("${sample_id}_MRG_sorted.bam")
-      file("${sample_id}_MRG_sorted.bam.bai")
+      tuple val(sample_id), file("${sample_id}_MRG_sorted.bam"), file("${sample_id}_MRG_sorted.bam.bai")
 
     when:
       params.inclMrgRds == true
@@ -261,6 +281,31 @@ process samtools_bam_srt_idx_MRG {
       samtools sort -@ ${task.cpus} -o ${sample_id}_MRG_sorted.bam ${sample_id}_MRG.bam
 
       samtools index -@ ${task.cpus} ${sample_id}_MRG_sorted.bam
+    """
+}
+
+process picard_RG_MRG {
+    if (publishInterBams == true) {
+    publishDir "${params.outdir}/02_bams/MergedReads", pattern: '*{.bam,.bam.bai}', mode: 'copy'
+    }
+    tag "Adding read group information to $sample_id (merged reads)"
+    label 'Low_res'
+
+    input:
+      tuple val(sample_id), file(bam_file), file(bam_index), val(lib)
+
+    output:
+      file("${sample_id}_RG.bam")
+      file("${sample_id}_RG.bam.bai")
+
+    when:
+      params.inclRdPrs == true
+
+    script:
+    """
+      picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=$bam_file O=${sample_id}_RG.bam RGID=$params.rgID RGLB=$lib RGPL=illumina RGSM=$sample_id
+
+      samtools index -@ ${task.cpus} ${sample_id}_RG.bam
     """
 }
 
@@ -355,7 +400,13 @@ process dmgprof {
       file '*'
 
     script:
+    if (params.X11 == true)
         """
+          damageprofiler -Xmx${task.memory.toGiga()}g -i $bam_file -r ${params.refseq} -o .
+        """
+    else if (params.X11 == false)
+        """
+          unset DISPLAY
           damageprofiler -Xmx${task.memory.toGiga()}g -i $bam_file -r ${params.refseq} -o .
         """
 
@@ -384,6 +435,7 @@ workflow {
         }
         quickcheck_PRS_sams(mapped_PRS.flatten().filter( ~/.*sam$/ ).toList())
         samtools_bam_srt_idx_PRS(mapped_PRS)
+        picard_RG_PRS(samtools_bam_srt_idx_PRS.out)
     }
 
     if (params.inclMrgRds) {
@@ -397,14 +449,18 @@ workflow {
         }
         quickcheck_MRG_sams(mapped_MRG.flatten().filter( ~/.*sam$/ ).toList())
         samtools_bam_srt_idx_MRG(mapped_MRG)
+        picard_RG_MRG(samtools_bam_srt_idx_MRG.out)
     }
 
     if (params.inclRdPrs == true && params.inclMrgRds == true) {
-        samtools_merge(samtools_bam_srt_idx_PRS.out[0].mix(samtools_bam_srt_idx_MRG.out[0]).map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
+        mapped_unmerged = picard_RG_PRS.out[0].mix(picard_RG_MRG.out[0]).map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple()
+        samtools_merge(mapped_unmerged.map{ [it, it.first().split(/_/)[-1]] })
     } else if (params.inclRdPrs == true && params.inclMrgRds == false) {
-        samtools_merge(samtools_bam_srt_idx_PRS.out[0].map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
+        mapped_unmerged = picard_RG_PRS.out[0].map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple()
+        samtools_merge(mapped_unmerged.map{ [it, it.first().split(/_/)[-1]] })
     } else if (params.inclRdPrs == false && params.inclMrgRds == true) {
-        samtools_merge(samtools_bam_srt_idx_MRG.out[0].map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
+        mapped_unmerged = picard_RG_MRG.out[0].map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple()
+        samtools_merge(mapped_unmerged.map{ [it, it.first().split(/_/)[-1]] })
     }
 
     quickcheck_bams(samtools_merge.out[0].flatten().filter( ~/.*bam$/ ).toList())
