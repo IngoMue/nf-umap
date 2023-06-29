@@ -56,7 +56,7 @@ Information that needs to be supplied either through flags or specified within `
 * Asbolute path to the reference sequence directory `refseq` (`path/to/GCF_000738735.5_ASM73873v5_genomic.fa`)
 * Prefix of the reference sequence `refprefix` (e.g. `GCF_000738735.5_ASM73873v5_genomic`)
 * Absolute path where unpaired reads are stored `read_pairs` (`path/to/*_{R1,R2}.fastq.gz`)
-* Asbolute path where merged reads a stored `merged_reads` (`path/to/*_U.fastq.gz`)
+* Asbolute path where merged reads are stored `merged_reads` (`path/to/*_U.fastq.gz`)
 * Output directory `outdir`
 * Specify whether you want to use merged and/or unpaired reads for mapping `inclMrgRds` `inclUnpRds` respectively (boolean, default true)
 * Decide whether bwa's newer version bwa-mem2 (identical output, faster, but larger index files, may not run on every cluster) or the original bwa-mem should be used for mapping `usebwamem2` (boolean, default true)
