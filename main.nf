@@ -19,6 +19,7 @@ log.info """\
          |Map with bwa-mem2?.....${params.usebwamem2}
          |
          |Skip merging?..........${params.skipmerge}
+         |Copy unmerged bams?....${params.publishInterBams}
          |
          |X11 unix server?.......${params.X11}
          |
@@ -213,7 +214,7 @@ process quickcheck_MRG_sams {
 
 
 process samtools_bam_srt_idx_PRS {
-    if (publishInterBams == true) {
+    if (params.publishInterBams == true) {
     publishDir "${params.outdir}/02_bams/ReadPairs", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
     }
     tag "Bam conversion, sorting and indexing for $sample_id (read pairs)"
@@ -239,7 +240,7 @@ process samtools_bam_srt_idx_PRS {
 }
 
 process samtools_bam_srt_idx_MRG {
-    if (publishInterBams == true) {
+    if (params.publishInterBams == true) {
         publishDir "${params.outdir}/02_bams/MergedReads", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
     }
     tag "Bam conversion, sorting and indexing for $sample_id (merged reads)"
