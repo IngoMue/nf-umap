@@ -4,8 +4,10 @@ channels:
   - bioconda
   - defaults
 dependencies:
+ - openjdk=8.0.144
  - bwa-mem2=2.2.1
  - bwa=0.7.17
  - samtools=1.13
- - qualimap=2.1.1
+ - qualimap=2.2.2d
  - damageprofiler=0.4.9
+ - picard=2.27.5

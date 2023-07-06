@@ -12,6 +12,8 @@ log.info """\
          |readpairs    : ${params.read_pairs}
          |mergedreads  : ${params.merged_reads}
          |outdir       : ${params.outdir}
+         |rgID         : ${params.rgID}
+         |rgPU         : ${params.rgPU}
          |
          |Include read pairs?....${params.inclRdPrs}
          |Include merged reads?..${params.inclMrgRds}
@@ -214,17 +216,13 @@ process quickcheck_MRG_sams {
 
 
 process samtools_bam_srt_idx_PRS {
-    if (params.publishInterBams == true) {
-    publishDir "${params.outdir}/02_bams/ReadPairs", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
-    }
     tag "Bam conversion, sorting and indexing for $sample_id (read pairs)"
 
     input:
       tuple val(sample_id), file(sam_file)
 
     output:
-      file("${sample_id}_PRS_sorted.bam")
-      file("${sample_id}_PRS_sorted.bam.bai")
+      tuple val(sample_id), file("${sample_id}_PRS_sorted.bam"), file("${sample_id}_PRS_sorted.bam.bai")
 
     when:
       params.inclRdPrs == true
@@ -239,18 +237,41 @@ process samtools_bam_srt_idx_PRS {
     """
 }
 
-process samtools_bam_srt_idx_MRG {
+process picard_RG_PRS {
     if (params.publishInterBams == true) {
-        publishDir "${params.outdir}/02_bams/MergedReads", pattern: '*_sorted{.bam,.bam.bai}', mode: 'copy'
+    publishDir "${params.outdir}/02_bams/ReadPairs", pattern: '*{.bam,.bam.bai}', mode: 'copy'
     }
+    tag "Adding read group information to $sample_id (read pairs)"
+    label 'Low_res'
+
+    input:
+      tuple val(sample_id), val(lib), file(bam_file), file(bam_index)
+
+    output:
+      file("${sample_id}_PRS_RG.bam")
+      file("${sample_id}_PRS_RG.bam.bai")
+
+    when:
+      params.inclRdPrs == true
+
+    script:
+    """
+      picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=$bam_file O=${sample_id}_PRS_RG.bam RGID=$params.rgID RGLB=$lib RGPL=illumina RGPU=$params.rgPU RGSM=$sample_id
+
+      samtools index -@ ${task.cpus} ${sample_id}_PRS_RG.bam
+    """
+}
+
+
+
+process samtools_bam_srt_idx_MRG {
     tag "Bam conversion, sorting and indexing for $sample_id (merged reads)"
 
     input:
       tuple val(sample_id), file(sam_file)
 
     output:
-      file("${sample_id}_MRG_sorted.bam")
-      file("${sample_id}_MRG_sorted.bam.bai")
+      tuple val(sample_id), file("${sample_id}_MRG_sorted.bam"), file("${sample_id}_MRG_sorted.bam.bai")
 
     when:
       params.inclMrgRds == true
@@ -262,6 +283,31 @@ process samtools_bam_srt_idx_MRG {
       samtools sort -@ ${task.cpus} -o ${sample_id}_MRG_sorted.bam ${sample_id}_MRG.bam
 
       samtools index -@ ${task.cpus} ${sample_id}_MRG_sorted.bam
+    """
+}
+
+process picard_RG_MRG {
+    if (params.publishInterBams == true) {
+    publishDir "${params.outdir}/02_bams/MergedReads", pattern: '*{.bam,.bam.bai}', mode: 'copy'
+    }
+    tag "Adding read group information to $sample_id (merged reads)"
+    label 'Low_res'
+
+    input:
+      tuple val(sample_id), val(lib), file(bam_file), file(bam_index)
+
+    output:
+      file("${sample_id}_MRG_RG.bam")
+      file("${sample_id}_MRG_RG.bam.bai")
+
+    when:
+      params.inclRdPrs == true
+
+    script:
+    """
+      picard -Xmx${task.memory.toGiga()}g AddOrReplaceReadGroups I=$bam_file O=${sample_id}_MRG_RG.bam RGID=$params.rgID RGLB=$lib RGPL=illumina RGPU=$params.rgPU RGSM=$sample_id
+
+      samtools index -@ ${task.cpus} ${sample_id}_MRG_RG.bam
     """
 }
 
@@ -321,31 +367,31 @@ process qualimap_bamqc {
     script:
         if (params.X11 == true && params.fullreport == false)
             """
-              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus}
+              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus} -nw 500
               cp ./${sample_id}/genome_results.txt ./${sample_id}_genome_results.txt
 	    """
         else if (params.X11 == false && params.fullreport == false)
             """
               unset DISPLAY
-              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus}
+              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus} -nw 500
               cp ./${sample_id}/genome_results.txt ./${sample_id}_genome_results.txt
             """
         else if (params.X11 == true && params.fullreport == true)
             """
-              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -outfile ${sample_id}_report.pdf -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus}
+              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -outfile ${sample_id}_report.pdf -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus} -nw 500
               cp ./${sample_id}/* .
             """
         else if (params.X11 == false && params.fullreport == true)
             """
               unset DISPLAY
-              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -outfile ${sample_id}_report.pdf -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus}
+              qualimap bamqc -bam ${bam_file} -outdir ${sample_id}/ -outfile ${sample_id}_report.pdf -c --java-mem-size=${task.memory.toGiga()}G -nt ${task.cpus} -nw 500
               cp ./${sample_id}/* .
             """
 
 }
 
 process dmgprof {
-    publishDir "${params.outdir}/05_damage/${sample_id}", pattern: '*.pdf', mode: 'move'
+    publishDir "${params.outdir}/05_damage/", pattern: '*', mode: 'move'
     tag "Generating damage report for $sample_id"
     label 'High_mem'
 
@@ -353,7 +399,7 @@ process dmgprof {
       tuple val(sample_id), file(bam_file), val(ref_ID), file(index), file(faidx)
 
     output:
-      file '*'
+      path '*'
 
     script:
     if (params.X11 == true)
@@ -391,6 +437,7 @@ workflow {
         }
         quickcheck_PRS_sams(mapped_PRS.flatten().filter( ~/.*sam$/ ).toList())
         samtools_bam_srt_idx_PRS(mapped_PRS)
+        picard_RG_PRS(samtools_bam_srt_idx_PRS.out.map{ [it.first(), it.first().split(/_/)[-1]] }.combine(samtools_bam_srt_idx_PRS.out, by: 0))
     }
 
     if (params.inclMrgRds) {
@@ -404,14 +451,15 @@ workflow {
         }
         quickcheck_MRG_sams(mapped_MRG.flatten().filter( ~/.*sam$/ ).toList())
         samtools_bam_srt_idx_MRG(mapped_MRG)
+        picard_RG_MRG(samtools_bam_srt_idx_MRG.out.map{ [it.first(), it.first().split(/_/)[-1]] }.combine(samtools_bam_srt_idx_PRS.out, by: 0))
     }
 
     if (params.inclRdPrs == true && params.inclMrgRds == true) {
-        samtools_merge(samtools_bam_srt_idx_PRS.out[0].mix(samtools_bam_srt_idx_MRG.out[0]).map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
+        samtools_merge(picard_RG_PRS.out[0].mix(picard_RG_MRG.out[0]).map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
     } else if (params.inclRdPrs == true && params.inclMrgRds == false) {
-        samtools_merge(samtools_bam_srt_idx_PRS.out[0].map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
+        samtools_merge(picard_RG_PRS.out[0].map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
     } else if (params.inclRdPrs == false && params.inclMrgRds == true) {
-        samtools_merge(samtools_bam_srt_idx_MRG.out[0].map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
+        samtools_merge(picard_RG_MRG.out[0].map { [ it.name.split(/_L0\d+/)[0], it] }.groupTuple())
     }
 
     quickcheck_bams(samtools_merge.out[0].flatten().filter( ~/.*bam$/ ).toList())
