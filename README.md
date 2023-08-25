@@ -79,5 +79,5 @@ Note: The default value for the sequencing platform which gets added through the
 
 An example for using this workflow would look like this:
 ```bash
-nextflow run main.nf -profile custom --refseq /some/path/RefDir/RefID_genomic.fa --refprefix RefID_genomic --read_pairs /some/path/'*_{R1,R2}.fastq.gz' --merged_reads /some/path/'*_U.fastq.gz' --outdir /some/path/results/ --usebwamem2 false --rdID "P12345" --rdPU "A00621:496:HGLYGDSX2" --X11 true --fullreport false --runDMGprof true -with-report
+nextflow run main.nf -profile custom --refseq /some/path/RefDir/RefID_genomic.fa --refprefix RefID_genomic --read_pairs /some/path/'*_{R1,R2}.fastq.gz' --merged_reads /some/path/'*_U.fastq.gz' --outdir /some/path/results/ --usebwamem2 false --rgID "P12345" --rgPU "A00621:496:HGLYGDSX2" --X11 true --fullreport false --runDMGprof true -with-report
 ```
