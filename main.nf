@@ -12,7 +12,6 @@ log.info """\
          |readpairs    : ${params.read_pairs}
          |mergedreads  : ${params.merged_reads}
          |outdir       : ${params.outdir}
-         |rgID         : ${params.rgID}
          |rgPU         : ${params.rgPU}
          |
          |Include read pairs?....${params.inclRdPrs}
@@ -114,7 +113,7 @@ process bwa_mem2_PRS {
 
     script:
     """
-      bwa-mem2 mem $params.refprefix $sample_file -t ${task.cpus} -R "@RG\\tID:${params.rgID}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${sample_id}" > ${sample_id}_PRS.sam
+      bwa-mem2 mem $params.refprefix $sample_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${sample_id}" > ${sample_id}_PRS.sam
     """
 }
 
@@ -134,7 +133,7 @@ process bwa_mem_PRS {
 
     script:
     """
-      bwa mem $params.refprefix $sample_file -t ${task.cpus} -R "@RG\\tID:${params.rgID}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${sample_id}" > ${sample_id}_PRS.sam
+      bwa mem $params.refprefix $sample_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${sample_id}" > ${sample_id}_PRS.sam
     """
 }
 
@@ -172,7 +171,7 @@ process bwa_mem2_MRG {
 
     script:
     """
-      bwa-mem2 mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${params.rgID}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
+      bwa-mem2 mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
     """
 }
 
@@ -192,7 +191,7 @@ process bwa_mem_MRG {
 
     script:
     """
-      bwa mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${params.rgID}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
+      bwa mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
     """
 }
 
