@@ -63,7 +63,6 @@ Information that needs to be supplied either through flags or specified within `
 * Specify whether you want to use merged and/or unpaired reads for mapping `inclMrgRds` `inclUnpRds` respectively (boolean, default true)
 * Decide whether bwa's newer version bwa-mem2 (identical output, faster, but larger index files, may not run on every cluster) or the original bwa-mem should be used for mapping `usebwamem2` (boolean, default true)
 * Should merging be skipped? `skipmerge` (boolean, default false) If one library per individual and only one type of reads are used, merging becomes unnecessary
-* Specify the read group ID `rgID` that should be added to *all* samples of the run (string, default `"batch1"`)
 * Specify the read group platform unit `rgPU` (string, default `"X12345:123:ABCDEFGH1"`) this can be e.g. the flowcell ID, which can be found in fastq files received from sequencing deliveries, the first three values in the header are @(instrumentID):(runNumber):(flowcellID) (e.g. `@A00621:496:HGLYGDSX2`)
 * Should unmerged bam files be copied into the output directory? `publishInterBams` (boolean, default false) Note that these are the final bam files if merging is skipped.
 * Specify whether the server uses an X11 system `X11` (boolean), if it doesn't, qualimap will throw an [error](http://qualimap.conesalab.org/doc_html/faq.html#x11problem) (default false)
@@ -79,5 +78,5 @@ Note: The default value for the sequencing platform which gets added through the
 
 An example for using this workflow would look like this:
 ```bash
-nextflow run main.nf -profile custom --refseq /some/path/RefDir/RefID_genomic.fa --refprefix RefID_genomic --read_pairs /some/path/'*_{R1,R2}.fastq.gz' --merged_reads /some/path/'*_U.fastq.gz' --outdir /some/path/results/ --usebwamem2 false --rgID "P12345" --rgPU "A00621:496:HGLYGDSX2" --X11 true --fullreport false --runDMGprof true -with-report
+nextflow run main.nf -profile custom --refseq /some/path/RefDir/RefID_genomic.fa --refprefix RefID_genomic --read_pairs /some/path/'*_{R1,R2}.fastq.gz' --merged_reads /some/path/'*_U.fastq.gz' --outdir /some/path/results/ --usebwamem2 false --rgPU "A00621:496:HGLYGDSX2" --X11 true --fullreport false --runDMGprof true -with-report
 ```
