@@ -171,7 +171,7 @@ process bwa_mem2_MRG {
 
     script:
     """
-      bwa-mem2 mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
+      bwa-mem2 mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${mrg_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
     """
 }
 
@@ -191,7 +191,7 @@ process bwa_mem_MRG {
 
     script:
     """
-      bwa mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
+      bwa mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${mrg_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
     """
 }
 
