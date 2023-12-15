@@ -103,7 +103,7 @@ process bwa_mem2_PRS {
     tag "Mapping read pairs for $sample_id onto $params.refprefix using bwa-mem2"
 
     input:
-      tuple val(sample_id), val(lib), path(sample_file), val(ref_ID), path(index), file(faidx)
+      tuple val(sample_id), val(SM), val(lib), path(sample_file), val(ref_ID), path(index), file(faidx)
 
     output:
       tuple val(sample_id), file("${sample_id}_PRS.sam")
@@ -113,7 +113,7 @@ process bwa_mem2_PRS {
 
     script:
     """
-      bwa-mem2 mem $params.refprefix $sample_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${sample_id}" > ${sample_id}_PRS.sam
+      bwa-mem2 mem $params.refprefix $sample_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${SM}" > ${sample_id}_PRS.sam
     """
 }
 
@@ -123,7 +123,7 @@ process bwa_mem_PRS {
     tag "Mapping read pairs for $sample_id onto $params.refprefix using bwa mem"
 
     input:
-      tuple val(sample_id), val(lib), path(sample_file), val(ref_ID), path(index), file(faidx)
+      tuple val(sample_id), val(SM), val(lib), path(sample_file), val(ref_ID), path(index), file(faidx)
 
     output:
       tuple val(sample_id), file("${sample_id}_PRS.sam")
@@ -133,7 +133,7 @@ process bwa_mem_PRS {
 
     script:
     """
-      bwa mem $params.refprefix $sample_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${sample_id}" > ${sample_id}_PRS.sam
+      bwa mem $params.refprefix $sample_file -t ${task.cpus} -R "@RG\\tID:${sample_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${SM}" > ${sample_id}_PRS.sam
     """
 }
 
@@ -161,7 +161,7 @@ process bwa_mem2_MRG {
     tag "Mapping merged reads for $mrg_id onto $params.refprefix using bwa-mem2"
 
     input:
-      tuple val(mrg_id), val(lib), path(merged_file), val(ref_ID), path(index), file(faidx)
+      tuple val(mrg_id), val(SM), val(lib), path(merged_file), val(ref_ID), path(index), file(faidx)
 
     output:
       tuple val(mrg_id), file("${mrg_id}_MRG.sam")
@@ -171,7 +171,7 @@ process bwa_mem2_MRG {
 
     script:
     """
-      bwa-mem2 mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${mrg_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
+      bwa-mem2 mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${mrg_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${SM}" > ${mrg_id}_MRG.sam
     """
 }
 
@@ -181,7 +181,7 @@ process bwa_mem_MRG {
     tag "Mapping merged reads for $mrg_id onto $params.refprefix using bwa mem"
 
     input:
-      tuple val(mrg_id), val(lib), path(merged_file), val(ref_ID), path(index), file(faidx)
+      tuple val(mrg_id), val(SM), val(lib), path(merged_file), val(ref_ID), path(index), file(faidx)
 
     output:
       tuple val(mrg_id), file("${mrg_id}_MRG.sam")
@@ -191,7 +191,7 @@ process bwa_mem_MRG {
 
     script:
     """
-      bwa mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${mrg_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${mrg_id}" > ${mrg_id}_MRG.sam
+      bwa mem $params.refprefix $merged_file -t ${task.cpus} -R "@RG\\tID:${mrg_id}\\tLB:${lib}\\tPL:ILLUMINA\\tPU:${params.rgPU}\\tSM:${SM}" > ${mrg_id}_MRG.sam
     """
 }
 
@@ -383,7 +383,7 @@ workflow {
 
     if (params.inclRdPrs) {
         read_PRS_idx = read_prs.combine(refindex)
-        mapping_input_PRS = read_PRS_idx.map{ [it.first(), it.first().split(/_/)[-1]] }.combine(read_PRS_idx, by: 0)
+        mapping_input_PRS = read_PRS_idx.map{ [it.first(), it.first().split(/_L0\d+/)[0], it.first().split(/_/)[-1]] }.combine(read_PRS_idx, by: 0)
         if (params.usebwamem2) {
             bwa_mem2_PRS(mapping_input_PRS)
             mapped_PRS = bwa_mem2_PRS.out
@@ -397,7 +397,7 @@ workflow {
 
     if (params.inclMrgRds) {
         MRG_reads_idx = mrg_reads.combine(refindex)
-        mapping_input_MRG = MRG_reads_idx.map{ [it.first(), it.first().split(/_/)[-1]] }.combine(MRG_reads_idx, by: 0)
+        mapping_input_MRG = MRG_reads_idx.map{ [it.first(), it.first().split(/_L0\d+/)[0], it.first().split(/_/)[-1]] }.combine(MRG_reads_idx, by: 0)
         if (params.usebwamem2) {
             bwa_mem2_MRG(mapping_input_MRG)
             mapped_MRG = bwa_mem2_MRG.out
