@@ -57,13 +57,13 @@ The pipeline uses `fastq(.gz)` reads as input. All reads need to be stored in a 
 Information that needs to be supplied either through flags or specified within `nextflow.config` includes:
 * Asbolute path to the reference sequence directory `refseq` (`path/to/GCF_000738735.5_ASM73873v5_genomic.fa`)
 * Prefix of the reference sequence `refprefix` (e.g. `GCF_000738735.5_ASM73873v5_genomic`)
-* Absolute path where unpaired reads are stored `read_pairs` (`'path/to/*_{R1,R2}.fastq.gz'`). It's important to include the quotations as Nextflow won't recognise the expression and only use the first matching file otherwise.
-* Asbolute path where merged reads are stored `merged_reads` (`'path/to/*_U.fastq.gz'`). Again remember to include the quotation marks.
+* Absolute path where unpaired reads are stored `read_pairs` (`path/to/'*_{R1,R2}.fastq.gz'`). It's important to include the quotations as Nextflow won't recognise the expression and only use the first matching file otherwise.
+* Asbolute path where merged reads are stored `merged_reads` (`path/to/'*_U.fastq.gz'`). Again remember to include the quotation marks.
 * Output directory `outdir`
 * Specify whether you want to use merged and/or unpaired reads for mapping `inclMrgRds` `inclUnpRds` respectively (boolean, default true)
 * Decide whether bwa's newer version bwa-mem2 (identical output, faster, but larger index files, may not run on every cluster) or the original bwa-mem should be used for mapping `usebwamem2` (boolean, default true)
 * Should merging be skipped? `skipmerge` (boolean, default false) If one library per individual and only one type of reads are used, merging becomes unnecessary
-* Specify the read group platform unit `rgPU` (string, default `"X12345:123:ABCDEFGH1"`) this can be e.g. the flowcell ID, which can be found in fastq files received from sequencing deliveries, the first three values in the header are @(instrumentID):(runNumber):(flowcellID) (e.g. `@A00621:496:HGLYGDSX2`)
+* Specify the read group platform unit `rgPU` (string, default `"X12345:123:ABCDEFGH1"`) this can be e.g. the flowcell ID, which can be found in fastq files received from sequencing deliveries, the first three values in the header are @(instrumentID):(runNumber):(flowcellID) (e.g. `A00621:496:HGLYGDSX2`)
 * Should unmerged bam files be copied into the output directory? `publishInterBams` (boolean, default false) Note that these are the final bam files if merging is skipped.
 * Specify whether the server uses an X11 system `X11` (boolean), if it doesn't, qualimap will throw an [error](http://qualimap.conesalab.org/doc_html/faq.html#x11problem) (default false)
 * Specify whether you are using Mamba `UseMamba` (boolean, default true)
